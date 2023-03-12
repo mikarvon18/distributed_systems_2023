@@ -2,12 +2,12 @@ import db_connector
 from threading import Thread
 from kafka import KafkaProducer, KafkaConsumer
 
+print("Hello world")
 
 topic = "chat_7"
-consumer = KafkaConsumer(topic, bootstrap_servers=['localhost:9092'])
+consumer = KafkaConsumer(topic, bootstrap_servers=['broker:9093'])
 
 def receive_messages(conn):
-    print("Reading messages...")
     while True:
         for message in consumer:
             decoded_message = message.value.decode()
@@ -17,7 +17,7 @@ def receive_messages(conn):
             conn.insert_message(user_id_from_message, message_text, topic)
 def main():
     print("Hello World!")
-    conn = db_connector.db_connector("localhost", "db", "root", "password")
+    conn = db_connector.db_connector("distributed_systems-mysql_db-1", "db", "root", "password")
     conn.retrieve_users()
     receive_messages(conn)
     #Thread(target=receive_messages(conn)).start()

@@ -2,13 +2,29 @@ from tkinter import *
 from kafka import KafkaProducer, KafkaConsumer
 from threading import Thread
 from datetime import datetime
+import time
 import db_connector
+import asyncio
+
 
 # create Kafka producer and consumer
+brokers = ['localhost:9092', 'localhost:9095']
 topic = "chat_7"
 user_id = input('Enter your user ID: ')
-producer = KafkaProducer(bootstrap_servers=['localhost:9092'])
-consumer = KafkaConsumer(topic, bootstrap_servers=['localhost:9092'], auto_offset_reset='earliest')
+producer = None
+consumer = None
+
+def set_producer_and_consumer(brokers):
+    for broker in brokers:
+        try:
+            producer = KafkaProducer(bootstrap_servers=broker)
+            consumer = KafkaConsumer(topic, bootstrap_servers=broker, auto_offset_reset='earliest')
+            print("Broker set: ", broker)
+            return consumer, producer
+        except:
+            continue
+
+    return None
 
 
 
@@ -41,6 +57,7 @@ def retrieve_old_messages(conn):
 def receive_messages():
     print("whoop")
     global user_id
+    global consumer
     # get all messages sent to the topic since the beginning
     """
     all_messages = consumer.poll(timeout_ms=1000)
@@ -67,8 +84,12 @@ def receive_messages():
 
         message_box.insert(END, f'{time_formatted} - {user_id_modified}: {message_text}\n')
 
-
-
+def update_consumer_and_producer():
+    global consumer
+    global producer
+    while True:
+        consumer, producer = set_producer_and_consumer(brokers)
+        time.sleep(120)
 # create Tkinter window
 window = Tk()
 window.title(f'Chat App - {user_id}')
@@ -82,12 +103,15 @@ send_button.pack(side=LEFT, padx=5, pady=5)
 # create message box
 message_box = Text(window, width=50)
 message_box.pack(side=LEFT, padx=5, pady=5)
-
+consumer, producer = set_producer_and_consumer(brokers)
 conn = db_connector.db_connector("localhost", "db", "root", "password")
 retrieve_old_messages(conn)
 conn.close_connection()
 # start thread to receive messages
+
+
 Thread(target=receive_messages).start()
+Thread(target=update_consumer_and_producer).start()
 
 # run the Tkinter event loop
 window.mainloop()
