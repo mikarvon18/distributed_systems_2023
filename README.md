@@ -19,3 +19,12 @@ After this you should be able to build the docker images and containers by runni
 When you have the containers running, it is possible to use the chatroom with **kafka_ui.py**. Running this program prompts the user to give out a nickname that they can use in the chatroom. After they have given a nickname, they join the chatroom and are able to send messages. Several instances of the UI can be started with different usernames and messages sent from different users are visible in all instances.
 
 When starting the containers, db_writer-1 usually exits and says there are no brokers active. This container can just be started again and it should work just fine.
+
+## Dependencies
+
+The required dependencies for running kafka.ui.py can be installed using pip:
+```
+pip install kafka-python
+pip install tk
+pip install mysql-connector-python
+```
