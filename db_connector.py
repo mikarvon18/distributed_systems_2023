@@ -55,13 +55,17 @@ class db_connector(object):
 
     def register(self, nickname):
         user_name = nickname
-        password = input("Password: ")
-        sql = "INSERT INTO Users (Name, Password) VALUES (%s, %s)"
-        cursor = self.connection.cursor()
-        val = (user_name, password)
-        cursor.execute(sql, val)
-        self.commit()
-        print(cursor.rowcount, "was inserted.")
+        if self.login(user_name) == None:
+            password = input("Password: ")
+            sql = "INSERT INTO Users (Name, Password) VALUES (%s, %s)"
+            cursor = self.connection.cursor()
+            val = (user_name, password)
+            cursor.execute(sql, val)
+            self.commit()
+            print(cursor.rowcount, "was inserted.")
+            return 0
+        else:
+            return None
     
     def login(self, nickname=0):
         if nickname == 0:

@@ -10,9 +10,8 @@ import asyncio
 # create Kafka producer and consumer
 brokers = ['localhost:9092', 'localhost:9095']
 topic = "chat_7"
-user_id = input('Enter your user ID: ')
-producer = None
-consumer = None
+user_id = None
+
 
 def set_producer_and_consumer(brokers):
     for broker in brokers:
@@ -41,13 +40,12 @@ def send_message():
     input_box.delete(0, END)
 
 # function to receive messages from Kafka topic
-def retrieve_old_messages(conn):
-    global user_id
+def retrieve_old_messages(conn, user_id):
     messages = conn.retrieve_messages(topic)
     for message in messages:
         time_formatted = message[4].strftime("%H:%M:%S")
         if message[1] == user_id:
-            user_id_modified = "me"
+            user_id_modified = "Me"
         else:
             user_id_modified = message[1]
          
@@ -55,8 +53,8 @@ def retrieve_old_messages(conn):
         message_box.insert(END, f'{time_formatted} - {user_id_modified}: {message[2]}\n')
 
 def receive_messages():
-    print("whoop")
     global user_id
+    print("whoop")
     global consumer
     # get all messages sent to the topic since the beginning
     """
@@ -90,6 +88,36 @@ def update_consumer_and_producer():
     while True:
         consumer, producer = set_producer_and_consumer(brokers)
         time.sleep(120)
+
+
+producer = None
+consumer = None
+
+consumer, producer = set_producer_and_consumer(brokers)
+conn = db_connector.db_connector("localhost", "db", "root", "password")
+user_id = input('Enter your user nickname: ')
+login_result = conn.login(user_id)
+print(login_result)
+if login_result == None:
+    choice = input("Username not found, would you like to register? (y/n): ")
+    print(f"You chose: {choice}")
+    if choice == "y":
+        if conn.register(user_id) == None:
+            print("Username is taken, quitting..")
+            quit()
+    else:
+        print("Quitting... ")
+        quit()
+else:
+    pw = input("Give your password: ")
+    if pw != login_result[2]:
+        print("Wrong password, quitting app.. ")
+        quit()
+    
+
+
+
+
 # create Tkinter window
 window = Tk()
 window.title(f'Chat App - {user_id}')
@@ -103,9 +131,9 @@ send_button.pack(side=LEFT, padx=5, pady=5)
 # create message box
 message_box = Text(window, width=50)
 message_box.pack(side=LEFT, padx=5, pady=5)
-consumer, producer = set_producer_and_consumer(brokers)
-conn = db_connector.db_connector("localhost", "db", "root", "password")
-retrieve_old_messages(conn)
+
+
+retrieve_old_messages(conn, user_id)
 conn.close_connection()
 # start thread to receive messages
 

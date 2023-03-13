@@ -73,6 +73,8 @@ services:
     depends_on:
       - broker
       - mysql_db
+      - zookeeper
+      - broker2
     command: python db_writer.py
     volumes:
       - .:/app
